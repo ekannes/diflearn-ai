@@ -15,10 +15,10 @@ if not os.path.exists(UPLOAD_FOLDER):
 conn = sqlite3.connect('students.db', check_same_thread=False)
 cursor = conn.cursor()
 
-cursor.execute('DROP TABLE IF EXISTS students')
+#cursor.execute('DROP TABLE IF EXISTS students')
 
 cursor.execute('''
-CREATE TABLE students (
+CREATE TABLE IF NOT EXISTS students (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nama TEXT,
     nilai_bab INTEGER,
