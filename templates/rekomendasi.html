@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Rekomendasi Guru - DIFLearn AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<nav>
+    <h2>DIFLearn AI</h2>
+    <ul>
+        <li><a href="/">Dashboard</a></li>
+        <li><a href="/rekomendasi">Rekomendasi Guru</a></li>
+    </ul>
+</nav>
+
+<header class="hero">
+    <h1>Rekomendasi Pembelajaran untuk Guru</h1>
+    <p>
+        Sistem mengelompokkan siswa berdasarkan hasil prediksi AI
+        dan memberikan arahan strategi pembelajaran berdiferensiasi.
+    </p>
+</header>
+
+<section class="stats">
+
+    <div class="card">
+        <h2>{{ baik_students|length }}</h2>
+        <p>Kelompok Baik</p>
+    </div>
+
+    <div class="card">
+        <h2>{{ cukup_students|length }}</h2>
+        <p>Kelompok Cukup</p>
+    </div>
+
+    <div class="card">
+        <h2>{{ risiko_students|length }}</h2>
+        <p>Kelompok Berisiko</p>
+    </div>
+
+</section>
+
+<section class="table-section">
+    <h2>Kelompok Siswa Baik</h2>
+
+    <div class="recommend-card baik-card">
+        <h3>Strategi Pembelajaran</h3>
+        <p>
+            Gunakan project based learning, studi kasus, pengayaan materi,
+            dan tantangan soal tingkat lanjut.
+        </p>
+
+        <h3>Peran Guru</h3>
+        <p>
+            Guru berperan sebagai fasilitator dan mentor.
+            Siswa dapat dilibatkan sebagai tutor sebaya.
+        </p>
+
+        <h3>Daftar Siswa</h3>
+        <ul>
+            {% for siswa in baik_students %}
+                <li>{{ siswa.nama }} - Nilai Akhir: {{ siswa.nilai_akhir }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+<section class="table-section">
+    <h2>Kelompok Siswa Cukup</h2>
+
+    <div class="recommend-card cukup-card">
+        <h3>Strategi Pembelajaran</h3>
+        <p>
+            Gunakan latihan bertahap, diskusi kelompok kecil,
+            video pembelajaran singkat, dan kuis formatif.
+        </p>
+
+        <h3>Peran Guru</h3>
+        <p>
+            Guru membimbing penguatan konsep dan memberi umpan balik rutin.
+        </p>
+
+        <h3>Daftar Siswa</h3>
+        <ul>
+            {% for siswa in cukup_students %}
+                <li>{{ siswa.nama }} - Nilai Akhir: {{ siswa.nilai_akhir }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+<section class="table-section">
+    <h2>Kelompok Siswa Berisiko</h2>
+
+    <div class="recommend-card risiko-card">
+        <h3>Strategi Pembelajaran</h3>
+        <p>
+            Lakukan remedial, pembelajaran ulang konsep dasar,
+            pendampingan personal, dan tutor sebaya.
+        </p>
+
+        <h3>Peran Guru</h3>
+        <p>
+            Guru memberikan scaffolding, contoh konkret,
+            pemantauan intensif, dan asesmen diagnostik ulang.
+        </p>
+
+        <h3>Daftar Siswa</h3>
+        <ul>
+            {% for siswa in risiko_students %}
+                <li>{{ siswa.nama }} - Nilai Akhir: {{ siswa.nilai_akhir }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+<footer>
+    <p>DIFLearn AI © 2026 | Smart Differentiated Learning System</p>
+</footer>
+
+</body>
+</html>
