@@ -9,168 +9,209 @@
 
 <body>
 
-    <nav>
-        <h2>DIFLearn AI</h2>
+<nav>
+    <h2>DIFLearn AI</h2>
 
-        <ul>
-            <li><a href="#home">Home</a></li>
-            <li><a href="#input">Input Data</a></li>
-            <li><a href="#dashboard">Dashboard</a></li>
-            <li><a href="#analytics">Analytics</a></li>
-            <li><a href="#about">About</a></li>
-            <li><a href="/rekomendasi">Rekomendasi Guru</a></li>
-        </ul>
-    </nav>
+    <ul>
+        <li><a href="#home">Home</a></li>
+        <li><a href="#input">Upload Data</a></li>
+        <li><a href="#dashboard">Dashboard</a></li>
+        <li><a href="#analytics">Analytics</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="/rekomendasi">Rekomendasi Guru</a></li>
+    </ul>
+</nav>
 
-    <header class="hero" id="home">
-        <h1>Sistem Cerdas Pembelajaran Berdiferensiasi</h1>
-        <p>
-            Machine Learning untuk membantu guru memahami performa siswa berdasarkan
-            asesmen BAB, UTS, UAS, proyek, kehadiran, dan keaktifan.
-        </p>
-        <a href="#input" class="hero-button">Mulai Analisis</a>
-    </header>
+<header class="hero" id="home">
+    <h1>Sistem Pembelajaran Berdiferensiasi Berbasis Clustering</h1>
 
-    <section class="form-section" id="input">
-        <h2>Input Data Siswa</h2>
+    <p>
+        Sistem membantu guru mengelompokkan siswa secara otomatis
+        menggunakan K-Means Clustering berdasarkan hasil belajar siswa,
+        kemudian memberikan rekomendasi pembelajaran berdiferensiasi.
+    </p>
 
-        <form method="POST">
-            <input type="text" name="nama" placeholder="Nama Siswa" required>
+    <a href="#input" class="hero-button">
+        Mulai Analisis
+    </a>
+</header>
 
-            <input type="number" name="nilai_bab" placeholder="Nilai Asesmen BAB" required>
-            <input type="number" name="uts" placeholder="Nilai UTS" required>
-            <input type="number" name="uas" placeholder="Nilai UAS" required>
-            <input type="number" name="proyek" placeholder="Nilai Proyek" required>
+<section class="form-section" id="input">
 
-            <input type="number" name="kehadiran" placeholder="Kehadiran (%)" required>
-            <input type="number" name="keaktifan" placeholder="Keaktifan" required>
+    <h2>Upload File RAPORT Guru</h2>
 
-            <button type="submit">Simpan Data</button>
-        </form>
-    </section>
+    <form method="POST" enctype="multipart/form-data">
 
-    <section class="form-section">
-        <h2>Upload Dataset Siswa</h2>
+        <input
+            type="file"
+            name="file"
+            accept=".xls,.xlsx"
+            required
+        >
+        <button type="submit">
+            Upload dan Analisis
+        </button>
 
-        <form method="POST" enctype="multipart/form-data">
-            <input type="file" name="file" accept=".csv,.xlsx" required>
-            <button type="submit">Upload Dataset</button>
-        </form>
-    </section>
+    </form>
 
-    <section class="stats" id="dashboard">
-        <div class="card">
-            <h2>{{ students|length }}</h2>
-            <p>Total Siswa</p>
-        </div>
+</section>
 
-        <div class="card">
-            <h2>AI</h2>
-            <p>Random Forest Analytics</p>
-        </div>
+<section class="stats" id="dashboard">
 
-        <div class="card">
-            <h2>{{ students|length }}</h2>
-            <p>Data Dianalisis AI</p>
-        </div>
-    </section>
+    <div class="card">
+        <h2>{{ students|length }}</h2>
+        <p>Total Siswa</p>
+    </div>
 
-    <section class="chart-section" id="analytics">
-        <h2>Grafik Nilai Akhir Siswa</h2>
+    <div class="card">
+        <h2>K-Means</h2>
+        <p>Clustering Analysis</p>
+    </div>
 
-        <div class="chart-container">
-            <canvas id="myChart"></canvas>
-        </div>
-    </section>
+    <div class="card">
+        <h2>3</h2>
+        <p>Kelompok Belajar</p>
+    </div>
 
-    <section class="table-section">
-        <h2>Data Performa Siswa</h2>
+</section>
 
-        <table>
-            <tr>
-                <th>Nama</th>
-                <th>BAB</th>
-                <th>UTS</th>
-                <th>UAS</th>
-                <th>Proyek</th>
-                <th>Kehadiran</th>
-                <th>Keaktifan</th>
-                <th>Nilai Akhir</th>
-                <th>Status AI</th>
-                <th>Akurasi AI</th>
-                <th>Rekomendasi AI</th>
-            </tr>
+<section class="chart-section" id="analytics">
 
-            {% for siswa in students %}
-            <tr>
-                <td>{{ siswa.nama }}</td>
-                <td>{{ siswa.nilai_bab }}</td>
-                <td>{{ siswa.uts }}</td>
-                <td>{{ siswa.uas }}</td>
-                <td>{{ siswa.proyek }}</td>
-                <td>{{ siswa.kehadiran }}%</td>
-                <td>{{ siswa.keaktifan }}</td>
-                <td>{{ siswa.nilai_akhir }}</td>
+    <h2>Grafik Nilai Siswa</h2>
 
-                <td>
-                    {% if siswa.status == 'Baik' %}
-                        <span class="baik">{{ siswa.status }}</span>
-                    {% elif siswa.status == 'Cukup' %}
-                        <span class="cukup">{{ siswa.status }}</span>
-                    {% else %}
-                        <span class="risiko">{{ siswa.status }}</span>
-                    {% endif %}
-                </td>
+    <div class="chart-container">
+        <canvas id="myChart"></canvas>
+    </div>
 
-                <td>{{ siswa.probability }}%</td>
-                <td>{{ siswa.rekomendasi }}</td>
-            </tr>
-            {% endfor %}
-        </table>
-    </section>
+</section>
 
-    <section class="about-section" id="about">
-        <h2>Tentang DIFLearn AI</h2>
-        <p>
-            DIFLearn AI adalah sistem cerdas berbasis Machine Learning Random Forest
-            yang membantu guru menganalisis performa siswa, menghitung nilai akhir,
-            memprediksi risiko belajar, dan memberikan rekomendasi pembelajaran berdiferensiasi.
-        </p>
-    </section>
+<section class="table-section">
 
-    <footer>
-        <p>DIFLearn AI © 2026 | Smart Differentiated Learning System</p>
-    </footer>
+    <h2>Hasil Clustering Siswa</h2>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <table>
 
-    <script>
-        const labels = {{ labels|default([])|tojson }};
-        const nilaiData = {{ nilai_data|default([])|tojson }};
+        <tr>
+            <th>Nama</th>
+            <th>RT PH</th>
+            <th>PTS</th>
+            <th>RPT Jadi</th>
+            <th>Nilai Akhir</th>
+            <th>Kelompok</th>
+            <th>Rekomendasi</th>
+        </tr>
 
-        const ctx = document.getElementById('myChart');
+        {% for siswa in students %}
 
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Nilai Akhir Siswa',
-                    data: nilaiData,
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100
-                    }
-                }
+        <tr>
+
+            <td>{{ siswa.nama }}</td>
+            <td>{{ siswa.rt_ph }}</td>
+            <td>{{ siswa.uhb }}</td>
+            <td>{{ siswa.rpt }}</td>
+            <td>{{ siswa.nilai_akhir }}</td>
+
+            <td>
+
+                {% if siswa.status == 'Tinggi' %}
+                    <span class="baik">
+                        {{ siswa.status }}
+                    </span>
+
+                {% elif siswa.status == 'Sedang' %}
+                    <span class="cukup">
+                        {{ siswa.status }}
+                    </span>
+
+                {% else %}
+                    <span class="risiko">
+                        {{ siswa.status }}
+                    </span>
+
+                {% endif %}
+
+            </td>
+
+            <td>
+                {{ siswa.rekomendasi }}
+            </td>
+
+        </tr>
+
+        {% endfor %}
+
+    </table>
+
+</section>
+
+<section class="about-section" id="about">
+
+    <h2>Tentang DIFLearn AI</h2>
+
+    <p>
+        DIFLearn AI merupakan sistem pendukung pembelajaran
+        berdiferensiasi yang memanfaatkan K-Means Clustering
+        untuk mengelompokkan siswa ke dalam kelompok Tinggi,
+        Sedang, dan Rendah berdasarkan performa akademik.
+        Hasil pengelompokan digunakan untuk memberikan
+        rekomendasi strategi pembelajaran yang sesuai.
+    </p>
+
+</section>
+
+<footer>
+    <p>
+        DIFLearn AI © 2026 | Differentiated Learning Clustering System
+    </p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+const labels = {{ labels|default([])|tojson }};
+const nilaiData = {{ nilai_data|default([])|tojson }};
+
+const ctx = document.getElementById('myChart');
+
+new Chart(ctx, {
+
+    type: 'bar',
+
+    data: {
+
+        labels: labels,
+
+        datasets: [{
+
+            label: 'Nilai Akhir',
+
+            data: nilaiData,
+
+            borderWidth: 1
+
+        }]
+
+    },
+
+    options: {
+
+        responsive: true,
+
+        scales: {
+
+            y: {
+                beginAtZero: true,
+                max: 100
             }
-        });
-    </script>
+
+        }
+
+    }
+
+});
+
+</script>
 
 </body>
 </html>

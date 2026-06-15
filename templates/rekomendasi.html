@@ -2,13 +2,18 @@
 <html>
 <head>
     <title>Rekomendasi Guru - DIFLearn AI</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
 
 <nav>
     <h2>DIFLearn AI</h2>
+
     <ul>
         <li><a href="/">Dashboard</a></li>
         <li><a href="/rekomendasi">Rekomendasi Guru</a></li>
@@ -16,109 +21,220 @@
 </nav>
 
 <header class="hero">
-    <h1>Rekomendasi Pembelajaran untuk Guru</h1>
+
+    <h1>Rekomendasi Pembelajaran Berdiferensiasi</h1>
+
     <p>
-        Sistem mengelompokkan siswa berdasarkan hasil prediksi AI
-        dan memberikan arahan strategi pembelajaran berdiferensiasi.
+        Sistem mengelompokkan siswa ke dalam kelompok
+        Tinggi, Sedang, dan Rendah menggunakan
+        K-Means Clustering.
     </p>
+
 </header>
 
 <section class="stats">
 
     <div class="card">
-        <h2>{{ baik_students|length }}</h2>
-        <p>Kelompok Baik</p>
+        <h2>{{ tinggi_students|length }}</h2>
+        <p>Kelompok Tinggi</p>
     </div>
 
     <div class="card">
-        <h2>{{ cukup_students|length }}</h2>
-        <p>Kelompok Cukup</p>
+        <h2>{{ sedang_students|length }}</h2>
+        <p>Kelompok Sedang</p>
     </div>
 
     <div class="card">
-        <h2>{{ risiko_students|length }}</h2>
-        <p>Kelompok Berisiko</p>
+        <h2>{{ rendah_students|length }}</h2>
+        <p>Kelompok Rendah</p>
     </div>
 
 </section>
 
 <section class="table-section">
-    <h2>Kelompok Siswa Baik</h2>
+
+    <h2>Grafik Hasil Clustering</h2>
+
+    <canvas id="clusterChart"></canvas>
+
+</section>
+
+<section class="table-section">
+
+    <h2>Data Seluruh Siswa</h2>
+
+    <table border="1" width="100%">
+
+        <tr>
+            <th>Nama</th>
+            <th>RT PH</th>
+            <th>PTS/UHB</th>
+            <th>RPT</th>
+            <th>Nilai Akhir</th>
+            <th>Status</th>
+        </tr>
+
+        {% for siswa in tinggi_students %}
+        <tr>
+            <td>{{ siswa.nama }}</td>
+            <td>{{ siswa.rt_ph }}</td>
+            <td>{{ siswa.pts }}</td>
+            <td>{{ siswa.rpt }}</td>
+            <td>{{ siswa.nilai_akhir }}</td>
+            <td>Tinggi</td>
+        </tr>
+        {% endfor %}
+
+        {% for siswa in sedang_students %}
+        <tr>
+            <td>{{ siswa.nama }}</td>
+            <td>{{ siswa.rt_ph }}</td>
+            <td>{{ siswa.pts }}</td>
+            <td>{{ siswa.rpt }}</td>
+            <td>{{ siswa.nilai_akhir }}</td>
+            <td>Sedang</td>
+        </tr>
+        {% endfor %}
+
+        {% for siswa in rendah_students %}
+        <tr>
+            <td>{{ siswa.nama }}</td>
+            <td>{{ siswa.rt_ph }}</td>
+            <td>{{ siswa.pts }}</td>
+            <td>{{ siswa.rpt }}</td>
+            <td>{{ siswa.nilai_akhir }}</td>
+            <td>Rendah</td>
+        </tr>
+        {% endfor %}
+
+    </table>
+
+</section>
+
+<section class="table-section">
+
+    <h2>Kelompok Tinggi</h2>
 
     <div class="recommend-card baik-card">
-        <h3>Strategi Pembelajaran</h3>
-        <p>
-            Gunakan project based learning, studi kasus, pengayaan materi,
-            dan tantangan soal tingkat lanjut.
-        </p>
 
-        <h3>Peran Guru</h3>
+        <h3>Strategi Pembelajaran</h3>
+
         <p>
-            Guru berperan sebagai fasilitator dan mentor.
-            Siswa dapat dilibatkan sebagai tutor sebaya.
+            Berikan kegiatan pengayaan melalui
+            Project Based Learning, investigasi mandiri,
+            studi kasus, dan soal HOTS.
         </p>
 
         <h3>Daftar Siswa</h3>
+
         <ul>
-            {% for siswa in baik_students %}
-                <li>{{ siswa.nama }} - Nilai Akhir: {{ siswa.nilai_akhir }}</li>
+            {% for siswa in tinggi_students %}
+            <li>
+                {{ siswa.nama }}
+                ({{ siswa.nilai_akhir }})
+            </li>
             {% endfor %}
         </ul>
+
     </div>
+
 </section>
 
 <section class="table-section">
-    <h2>Kelompok Siswa Cukup</h2>
+
+    <h2>Kelompok Sedang</h2>
 
     <div class="recommend-card cukup-card">
-        <h3>Strategi Pembelajaran</h3>
-        <p>
-            Gunakan latihan bertahap, diskusi kelompok kecil,
-            video pembelajaran singkat, dan kuis formatif.
-        </p>
 
-        <h3>Peran Guru</h3>
+        <h3>Strategi Pembelajaran</h3>
+
         <p>
-            Guru membimbing penguatan konsep dan memberi umpan balik rutin.
+            Gunakan diskusi kelompok,
+            latihan bertahap,
+            dan penguatan konsep.
         </p>
 
         <h3>Daftar Siswa</h3>
+
         <ul>
-            {% for siswa in cukup_students %}
-                <li>{{ siswa.nama }} - Nilai Akhir: {{ siswa.nilai_akhir }}</li>
+            {% for siswa in sedang_students %}
+            <li>
+                {{ siswa.nama }}
+                ({{ siswa.nilai_akhir }})
+            </li>
             {% endfor %}
         </ul>
+
     </div>
+
 </section>
 
 <section class="table-section">
-    <h2>Kelompok Siswa Berisiko</h2>
+
+    <h2>Kelompok Rendah</h2>
 
     <div class="recommend-card risiko-card">
-        <h3>Strategi Pembelajaran</h3>
-        <p>
-            Lakukan remedial, pembelajaran ulang konsep dasar,
-            pendampingan personal, dan tutor sebaya.
-        </p>
 
-        <h3>Peran Guru</h3>
+        <h3>Strategi Pembelajaran</h3>
+
         <p>
-            Guru memberikan scaffolding, contoh konkret,
-            pemantauan intensif, dan asesmen diagnostik ulang.
+            Laksanakan remedial,
+            pendampingan intensif,
+            dan pembelajaran ulang.
         </p>
 
         <h3>Daftar Siswa</h3>
+
         <ul>
-            {% for siswa in risiko_students %}
-                <li>{{ siswa.nama }} - Nilai Akhir: {{ siswa.nilai_akhir }}</li>
+            {% for siswa in rendah_students %}
+            <li>
+                {{ siswa.nama }}
+                ({{ siswa.nilai_akhir }})
+            </li>
             {% endfor %}
         </ul>
+
     </div>
+
 </section>
 
 <footer>
-    <p>DIFLearn AI © 2026 | Smart Differentiated Learning System</p>
+
+    <p>
+        DIFLearn AI © 2026
+    </p>
+
 </footer>
+
+<script>
+
+const tinggi = {{ tinggi_students|length }};
+const sedang = {{ sedang_students|length }};
+const rendah = {{ rendah_students|length }};
+
+new Chart(
+    document.getElementById('clusterChart'),
+    {
+        type: 'bar',
+        data: {
+            labels: [
+                'Tinggi',
+                'Sedang',
+                'Rendah'
+            ],
+            datasets: [{
+                label: 'Jumlah Siswa',
+                data: [
+                    tinggi,
+                    sedang,
+                    rendah
+                ]
+            }]
+        }
+    }
+);
+
+</script>
 
 </body>
 </html>

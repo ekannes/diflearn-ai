@@ -2,231 +2,361 @@ from flask import Flask, render_template, request
 import pandas as pd
 import sqlite3
 import os
-from sklearn.ensemble import RandomForestClassifier
+import numpy as np
+from sklearn.cluster import KMeans
 
 app = Flask(__name__)
 
-UPLOAD_FOLDER = 'uploads'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+UPLOAD_FOLDER = "uploads"
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-conn = sqlite3.connect('students.db', check_same_thread=False)
+# =========================
+# DATABASE
+# =========================
+
+conn = sqlite3.connect(
+    "students.db",
+    check_same_thread=False
+)
+
 cursor = conn.cursor()
 
-#cursor.execute('DROP TABLE IF EXISTS students')
-
-cursor.execute('''
-CREATE TABLE IF NOT EXISTS students (
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS students(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nama TEXT,
-    nilai_bab INTEGER,
-    uts INTEGER,
-    uas INTEGER,
-    proyek INTEGER,
-    kehadiran INTEGER,
-    keaktifan INTEGER,
-    nilai_akhir INTEGER,
+    rt_ph REAL,
+    uhb REAL,
+    rpt REAL,
+    nilai_akhir REAL,
     status TEXT,
-    probability REAL,
     rekomendasi TEXT
 )
-''')
+""")
 
 conn.commit()
 
-training_data = [
-    [95, 90, 85],
-    [70, 65, 60],
-    [88, 85, 80],
-    [60, 55, 50],
-    [78, 80, 75],
-    [98, 95, 93],
-    [50, 45, 40],
-    [82, 84, 79]
-]
+# =========================
+# FUNGSI
+# =========================
 
-training_label = [
-    "Baik",
-    "Berisiko",
-    "Baik",
-    "Berisiko",
-    "Cukup",
-    "Baik",
-    "Berisiko",
-    "Cukup"
-]
-
-model = RandomForestClassifier()
-model.fit(training_data, training_label)
-
-def hitung_nilai_akhir(nilai_bab, uts, uas, proyek, keaktifan):
-    nilai_akhir = (
-        nilai_bab * 0.30 +
-        uts * 0.20 +
-        uas * 0.25 +
-        proyek * 0.15 +
-        keaktifan * 0.10
+def hitung_nilai_akhir(rt_ph, uhb, rpt):
+    return round(
+        (rt_ph + uhb + rpt) / 3,
+        2
     )
-    return round(nilai_akhir)
 
-def buat_rekomendasi(status):
-    if status == "Baik":
-        return """
-        Strategi pembelajaran: berikan pengayaan melalui project based learning, studi kasus, dan tantangan soal tingkat lanjut.
-        Peran guru: fasilitator dan mentor.
-        Tindak lanjut: libatkan siswa sebagai tutor sebaya untuk membantu teman yang masih kesulitan.
-        """
 
-    elif status == "Cukup":
-        return """
-        Strategi pembelajaran: gunakan diskusi kelompok kecil, latihan bertahap, video pembelajaran singkat, dan kuis formatif.
-        Peran guru: membimbing pemahaman konsep yang belum kuat.
-        Tindak lanjut: berikan latihan tambahan dan evaluasi ulang pada materi yang belum dikuasai.
-        """
+def cari_kolom(df, keyword):
 
-    else:
-        return """
-        Strategi pembelajaran: lakukan remedial, pembelajaran ulang konsep dasar, pendampingan personal, dan tutor sebaya.
-        Peran guru: memberikan scaffolding, contoh konkret, dan pemantauan lebih intensif.
-        Tindak lanjut: buat asesmen diagnostik ulang untuk mengetahui kesulitan utama siswa.
-        """
+    keyword = keyword.upper()
 
-def proses_siswa(nama, nilai_bab, uts, uas, proyek, kehadiran, keaktifan):
-    nilai_akhir = hitung_nilai_akhir(nilai_bab, uts, uas, proyek, keaktifan)
+    for row in range(min(10, len(df))):
 
-    status = model.predict([[
-        kehadiran,
-        keaktifan,
-        nilai_akhir
-    ]])[0]
+        for col in range(df.shape[1]):
 
-    probability = max(model.predict_proba([[
-        kehadiran,
-        keaktifan,
-        nilai_akhir
-    ]])[0]) * 100
+            nilai = str(
+                df.iloc[row, col]
+            ).upper()
 
-    rekomendasi = buat_rekomendasi(status)
+            if keyword in nilai:
+                return col
 
-    cursor.execute('''
-    INSERT INTO students
-    (nama, nilai_bab, uts, uas, proyek, kehadiran, keaktifan, nilai_akhir, status, probability, rekomendasi)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (
+    return None
+
+
+def simpan_siswa(
         nama,
-        nilai_bab,
-        uts,
-        uas,
-        proyek,
-        kehadiran,
-        keaktifan,
+        rt_ph,
+        uhb,
+        rpt):
+
+    nilai_akhir = hitung_nilai_akhir(
+        rt_ph,
+        uhb,
+        rpt
+    )
+
+    cursor.execute("""
+    INSERT INTO students(
+        nama,
+        rt_ph,
+        uhb,
+        rpt,
         nilai_akhir,
         status,
-        round(probability, 2),
         rekomendasi
+    )
+    VALUES(?,?,?,?,?,?,?)
+    """,
+    (
+        nama,
+        rt_ph,
+        uhb,
+        rpt,
+        nilai_akhir,
+        "Belum Diproses",
+        "-"
     ))
 
     conn.commit()
 
-@app.route('/', methods=['GET', 'POST'])
+
+def proses_kmeans():
+
+    cursor.execute("""
+    SELECT
+        id,
+        rt_ph,
+        uhb,
+        rpt,
+        nilai_akhir
+    FROM students
+    """)
+
+    data = cursor.fetchall()
+
+    if len(data) < 3:
+        return
+
+    X = []
+
+    for row in data:
+
+        X.append([
+            row[1],
+            row[2],
+            row[3],
+            row[4]
+        ])
+
+    X = np.array(X)
+
+    kmeans = KMeans(
+        n_clusters=3,
+        random_state=42,
+        n_init=10
+    )
+
+    labels = kmeans.fit_predict(X)
+
+    centers = kmeans.cluster_centers_
+
+    rata_cluster = [
+        np.mean(c)
+        for c in centers
+    ]
+
+    urutan = np.argsort(rata_cluster)
+
+    rendah = urutan[0]
+    sedang = urutan[1]
+    tinggi = urutan[2]
+
+    for i, row in enumerate(data):
+
+        cluster = labels[i]
+
+        if cluster == tinggi:
+
+            status = "Tinggi"
+
+            rekomendasi = """
+            Pengayaan,
+            proyek lanjutan,
+            tutor sebaya,
+            dan soal HOTS.
+            """
+
+        elif cluster == sedang:
+
+            status = "Sedang"
+
+            rekomendasi = """
+            Latihan bertahap,
+            diskusi kelompok,
+            dan penguatan konsep.
+            """
+
+        else:
+
+            status = "Rendah"
+
+            rekomendasi = """
+            Remedial,
+            pendampingan intensif,
+            dan pembelajaran ulang.
+            """
+
+        cursor.execute("""
+        UPDATE students
+        SET
+        status=?,
+        rekomendasi=?
+        WHERE id=?
+        """,
+        (
+            status,
+            rekomendasi,
+            row[0]
+        ))
+
+    conn.commit()
+
+# =========================
+# ROUTE HOME
+# =========================
+
+@app.route("/", methods=["GET", "POST"])
 def home():
 
-    if request.method == 'POST':
+    if request.method == "POST":
 
-        if 'file' in request.files:
-            file = request.files['file']
+        cursor.execute(
+            "DELETE FROM students"
+        )
+        conn.commit()
 
-            if file.filename != '':
-                filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
-                file.save(filepath)
+        file = request.files["file"]
 
-                if file.filename.endswith('.csv'):
-                    df = pd.read_csv(filepath)
-                elif file.filename.endswith('.xlsx'):
-                    df = pd.read_excel(filepath)
-                else:
-                    df = None
+        if file.filename != "":
 
-                if df is not None:
-                    for index, row in df.iterrows():
-                        proses_siswa(
-                            row['nama'],
-                            int(row['nilai_bab']),
-                            int(row['uts']),
-                            int(row['uas']),
-                            int(row['proyek']),
-                            int(row['kehadiran']),
-                            int(row['keaktifan'])
-                        )
-
-        elif 'nama' in request.form:
-            proses_siswa(
-                request.form['nama'],
-                int(request.form['nilai_bab']),
-                int(request.form['uts']),
-                int(request.form['uas']),
-                int(request.form['proyek']),
-                int(request.form['kehadiran']),
-                int(request.form['keaktifan'])
+            filepath = os.path.join(
+                app.config["UPLOAD_FOLDER"],
+                file.filename
             )
 
-    cursor.execute("SELECT * FROM students")
+            file.save(filepath)
+
+            df = pd.read_excel(
+                filepath,
+                header=None
+            )
+
+            col_nama = cari_kolom(df, "NAMA")
+            col_rtph = cari_kolom(df, "RT PH")
+            col_uhb = cari_kolom(df, "UHB")
+            col_rpt = cari_kolom(df, "RPT")
+
+            print(
+                col_nama,
+                col_rtph,
+                col_uhb,
+                col_rpt
+            )
+
+            for i in range(4, len(df)):
+
+                try:
+
+                    nama = df.iloc[i, col_nama]
+
+                    if pd.isna(nama):
+                        continue
+
+                    rt_ph = float(
+                        df.iloc[i, col_rtph]
+                    )
+
+                    uhb = float(
+                        df.iloc[i, col_uhb]
+                    )
+
+                    rpt = float(
+                        df.iloc[i, col_rpt]
+                    )
+
+                    simpan_siswa(
+                        str(nama),
+                        rt_ph,
+                        uhb,
+                        rpt
+                    )
+
+                except:
+                    continue
+
+            proses_kmeans()
+
+    cursor.execute(
+        "SELECT * FROM students"
+    )
+
     data = cursor.fetchall()
 
     students = []
 
     for row in data:
+
         students.append({
-            'nama': row[1],
-            'nilai_bab': row[2],
-            'uts': row[3],
-            'uas': row[4],
-            'proyek': row[5],
-            'kehadiran': row[6],
-            'keaktifan': row[7],
-            'nilai_akhir': row[8],
-            'status': row[9],
-            'probability': row[10],
-            'rekomendasi': row[11]
+
+            "nama": row[1],
+            "rt_ph": row[2],
+            "uhb": row[3],
+            "rpt": row[4],
+            "nilai_akhir": row[5],
+            "status": row[6],
+            "rekomendasi": row[7]
+
         })
 
+    labels = [s["nama"] for s in students]
+    nilai_data = [s["nilai_akhir"] for s in students]
+
+    print("LABELS =", labels)
+    print("NILAI =", nilai_data)
+
     return render_template(
-        'index.html',
+        "index.html",
         students=students,
-        labels=[s['nama'] for s in students],
-        nilai_data=[int(s['nilai_akhir']) for s in students]
-    )
-@app.route('/rekomendasi')
-def rekomendasi_guru():
+        labels=labels,
+        nilai_data=nilai_data
+)
+
+# =========================
+# REKOMENDASI
+# =========================
+
+@app.route("/rekomendasi")
+def rekomendasi():
 
     cursor.execute("SELECT * FROM students")
-    data = cursor.fetchall()
+    rows = cursor.fetchall()
 
-    baik_students = []
-    cukup_students = []
-    risiko_students = []
+    tinggi_students = []
+    sedang_students = []
+    rendah_students = []
 
-    for row in data:
+    for row in rows:
+
         siswa = {
-            'nama': row[1],
-            'nilai_akhir': row[8],
-            'status': row[9]
+            "nama": row[1],
+            "rt_ph": row[2],
+            "pts": row[3],      # UHB/PTS
+            "rpt": row[4],
+            "nilai_akhir": row[5],
+            "status": row[6],
+            "rekomendasi": row[7]
         }
 
-        if row[9] == "Baik":
-            baik_students.append(siswa)
-        elif row[9] == "Cukup":
-            cukup_students.append(siswa)
-        else:
-            risiko_students.append(siswa)
+        if row[6] == "Tinggi":
+            tinggi_students.append(siswa)
+
+        elif row[6] == "Sedang":
+            sedang_students.append(siswa)
+
+        elif row[6] == "Rendah":
+            rendah_students.append(siswa)
 
     return render_template(
-        'rekomendasi.html',
-        baik_students=baik_students,
-        cukup_students=cukup_students,
-        risiko_students=risiko_students
+        "rekomendasi.html",
+        tinggi_students=tinggi_students,
+        sedang_students=sedang_students,
+        rendah_students=rendah_students
     )
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     app.run(debug=True)
